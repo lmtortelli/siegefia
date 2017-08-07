@@ -115,11 +115,3 @@ capturas = ({'d8': [('d8', 'c8', 'b8'), ('d8', 'd7', 'd6'), ('d8', 'd9', 'd10')]
 'a6': [('a6', 'a5', 'a4'), ('a6', 'a7', 'a8'), ('a6', 'b6', 'c6')],\
 'a9': [('a9', 'a8', 'a7'), ('a9', 'a10', 'a11'), ('a9', 'b9', 'c9')],\
 'a8': [('a8', 'a7', 'a6'), ('a8', 'a9', 'a10'), ('a8', 'b8', 'c8')]})
-
-
-print 'c8' in capturas['d8'][0]
-for tupl in capturas['d8']:
-    print tupl
-print capturas['d8'][0][2]
-
-print capturas['d8'][0][2] in capturas['d8'][0]

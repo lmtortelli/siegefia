@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
 from rules import *
+from estado import State
 import random
 
 
@@ -10,10 +14,6 @@ class Siege(object):
 
     __capturas = []
 
-    __players = 0
-
-    def __init__(self,players):
-        self.__players = players
 
     def __isDone(self):
         if('h1' in self.__vermelhos):
@@ -23,23 +23,55 @@ class Siege(object):
         else:
             return False
 
-    def __checkMovement(self,turn,source,dest):
-        if(turn=='a'):#Turno Amarelo
-            print "OK"
-            #vefica se e movimento normal (vizinhos)
-            #vefica se e movimento de captura
-
-
-
-    def __orderGenerator(self):
-        if(self.__players==1):
-            return random.shuffle(['p','c'])
-        else:
-            return ['c','c']
-
+    #Somente responsavel por gerar a movimentacao
     def __movGenerator(self,turn):
         #return self.__minMax(turn)
         return self.__randomMovement(turn)
+
+        #Realiza a validacao da captura dado uma peca e seu vizinho (de cores contrarias) Assim se cosneguir aplica ruma captura ira retornar
+        #Dentro da lista de captura todos os movimentos necessarios
+    def __validateCapture(self,piece,viz):
+        emptySpot = None
+        for tupl in capturas[piece]:
+            if(viz in tupl):
+                if((tupl[2] not in self.__amarelos) and (tupl[2] not in self.__vermelhos)):
+                    self.__capturas.append([piece,[tupl[2],tupl[1]]])
+                break
+
+    #VErifica todas as capturas possiveis dado time Amarelo ou Vermelho (Etapa necessaria para avaliar se existe massacres disponíveis)
+    def __verifyAllCaptures(self,turn):
+        self.__capturas = []
+        if(turn=='a'):
+            for piece in self.__amarelos:
+                for viz in vizinhos[piece]:
+                    if(viz in self.__vermelhos):
+                        self.__validateCapture(piece,viz)
+        elif(turn=='v'):
+            for piece in self.__vermelhos:
+                for viz in vizinhos[piece]:
+                    if(viz in self.__amarelos):
+                        self.__validateCapture(piece,viz)
+
+    #Verifica vizinhos de uma determinada peca
+    def __verifyNeighborhoodPiece(self,turn,piece):
+        emptySpot = []
+
+        if(turn=='a'):
+            for viz in vizinhos[piece]:
+                if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
+                    emptySpot.append([piece,[viz,'']])
+                elif(viz in self.__amarelos):
+                    pass
+        elif(turn=='v'):
+            piece = self.__vermelhos[random.randint(0, len(self.__vermelhos)-1)]
+            for viz in vizinhos[piece]:
+                if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
+                    emptySpot.append([piece,[viz,'']])
+                elif(viz in self.__vermelhos):
+                    pass
+        return emptySpot
+
+
 
     def __randomMovement(self,turn):
         emptySpot = []
@@ -48,42 +80,25 @@ class Siege(object):
         while(not findMovement):
             self.__capturas = []
             emptySpot = []
+            self.__verifyAllCaptures(turn)
 
             if(turn=='a'):
                 piece = self.__amarelos[random.randint(0, len(self.__amarelos)-1)]
-                for viz in vizinhos[piece]:
-                    if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
-                        emptySpot.append(viz)
-                    elif(viz in self.__amarelos):
-                        pass
-                    elif(viz in self.__vermelhos):
-                        self.__validateCapture(piece,viz)
-            elif(turn=='v'):
+                emptySpot = self.__verifyNeighborhoodPiece(turn,piece)
+            else:
                 piece = self.__vermelhos[random.randint(0, len(self.__vermelhos)-1)]
-                for viz in vizinhos[piece]:
-                    if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
-                        emptySpot.append(viz)
-                    elif(viz in self.__vermelhos):
-                        pass
-                    elif(viz in self.__amarelos):
-                        self.__validateCapture(piece,viz)
+                emptySpot = self.__verifyNeighborhoodPiece(turn,piece)
 
             if(len(self.__capturas)!=0):
                 findMovement = True
-                rList = [piece,self.__capturas.pop()]
-            elif(len(emptySpot)!=0):
+                rList = self.__capturas.pop()
+            elif((len(emptySpot))!=0):
                 findMovement = True
-                rList = [piece,[emptySpot.pop(),'']]
+                rList = emptySpot.pop()
 
         return rList
 
-    def __validateCapture(self,piece,viz):
-        emptySpot = None
-        for tupl in capturas[piece]:
-            if(viz in tupl):
-                if((tupl[2] not in self.__amarelos) and (tupl[2] not in self.__vermelhos)):
-                    self.__capturas.append([tupl[2],tupl[1]])
-                break
+        #Verifica vizinhos dado uma determina peca no tabuleiro e seu time (Amarelo ou Vermelho())
 
 
     # Resposnsavel por verificar se o movimento foi uma captura e tambem deleta a peca capturada
@@ -106,6 +121,7 @@ class Siege(object):
 
         return boolReturn
 
+    #Aplica a modificacao do movimento no tabuleiro
     def __applyMovement(self,movement):
         if(movement[0] in self.__amarelos):
             index = self.__amarelos.index(movement[0])
@@ -114,34 +130,85 @@ class Siege(object):
             index = self.__vermelhos.index(movement[0])
             self.__vermelhos[index] = movement[1][0]
 
+    #Apos a primeira captura e necessario verificar se a nova posicao da peca gera uma nova captura alista de todas as captudas anteriormente disponiveis
+    #Segue intacta
+    def __nextCapture(self,turn,pos):
+        if(turn=='a'):
+            for viz in vizinhos[pos]:
+                if(viz in self.__vermelhos):
+                    self.__validateCapture(pos,viz)
+        elif(turn=='v'):
+            for viz in vizinhos[pos]:
+                if(viz in self.__amarelos):
+                    self.__validateCapture(pos,viz)
+
+    def __minMax(self,turn):
+
+        depth = 1
+        states = []
+        newStates = []
+        states.append(State(self.__amarelos,self.__vermelhos,None)
+        for i in range(depth):
+            for state in states:
+                newStates = state.makeChilds(turn)
+
+            if(turn=='a'):
+                turn = 'v'
+            else:
+                turn = 'a'
+
+            states = []
+            for state in newStates:
+                states = state.makeChilds(turn)
+        #movimentEscolhido = states.sort(min)
+        #return movimentEscolhido
 
 
+
+    #Metodo principal do jogo
     def gameSiege(self):
         turno = 'v'
-        player = self.__orderGenerator()
 
         while(not self.__isDone()):
-
             if(turno=='a'):
                 self.__capturas = []
                 mov = self.__movGenerator(turno) #minMax / Aleatorio e talz
+                print "##################"
+                print "AMARELO"
                 print mov
                 self.__applyMovement(mov)
                 if(self.__checkCapture(turno,mov)==True):
-                    print "CAPTUROU" #Montar sistema pos primeira captura
+                    self.__verifyAllCaptures(turno)
 
+                    print "##################"
+                    print "MASSACRE"
+
+                    while len(self.__capturas)>0:
+                        mov = self.__capturas.pop()
+                        self.__applyMovement(mov)
+                        self.__checkCapture(turno,mov)
+                        self.__verifyAllCaptures(turno)
                 turno = 'v'
 
-            else:
-                if(turno=='v'):
-                    self.__capturas = []
-                    mov = self.__movGenerator(turno) #minMax / Aleatorio e talz
-                    print mov
-                    self.__applyMovement(mov)
-                    if(self.__checkCapture(turno,mov)==True):
-                        print "CAPTUROU" #Montar sistema pos primeira captura
+            elif(turno=='v'):
+                self.__capturas = []
+                mov = self.__movGenerator(turno) #minMax / Aleatorio e talz
 
-                    turno = 'a'
+                print "##################"
+                print "VERMELHO"
+                print mov
+
+                self.__applyMovement(mov)
+                if(self.__checkCapture(turno,mov)==True):
+                    self.__verifyAllCaptures(turno)
+                    print "##################"
+                    print "MASSACRE"
+                    while len(self.__capturas)>0:
+                        mov = self.__capturas.pop()
+                        self.__applyMovement(mov)
+                        self.__checkCapture(turno,mov)
+                        self.__verifyAllCaptures(turno)
+                turno = 'a'
 
         print self.__amarelos
         print self.__vermelhos
