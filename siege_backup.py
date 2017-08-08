@@ -24,6 +24,10 @@ class Siege(object):
         else:
             return False
 
+    #Somente responsavel por gerar a movimentacao
+    def __movGenerator(self,turn):
+        #return self.__minMax(turn)
+        return self.__randomMovement(turn)
 
         #Realiza a validacao da captura dado uma peca e seu vizinho (de cores contrarias) Assim se cosneguir aplica ruma captura ira retornar
         #Dentro da lista de captura todos os movimentos necessarios
@@ -48,6 +52,55 @@ class Siege(object):
                 for viz in vizinhos[piece]:
                     if(viz in self.__amarelos):
                         self.__validateCapture(piece,viz)
+
+    #Verifica vizinhos de uma determinada peca
+    def __verifyNeighborhoodPiece(self,turn,piece):
+        emptySpot = []
+
+        if(turn=='a'):
+            for viz in vizinhos[piece]:
+                if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
+                    emptySpot.append([piece,[viz,'']])
+                elif(viz in self.__amarelos):
+                    pass
+        elif(turn=='v'):
+            piece = self.__vermelhos[random.randint(0, len(self.__vermelhos)-1)]
+            for viz in vizinhos[piece]:
+                if((viz not in self.__amarelos) and (viz not in self.__vermelhos)):
+                    emptySpot.append([piece,[viz,'']])
+                elif(viz in self.__vermelhos):
+                    pass
+        return emptySpot
+
+
+
+    def __randomMovement(self,turn):
+        emptySpot = []
+        rList = []
+        findMovement = False
+        while(not findMovement):
+            self.__capturas = []
+            emptySpot = []
+            self.__verifyAllCaptures(turn)
+
+            if(turn=='a'):
+                piece = self.__amarelos[random.randint(0, len(self.__amarelos)-1)]
+                emptySpot = self.__verifyNeighborhoodPiece(turn,piece)
+            else:
+                piece = self.__vermelhos[random.randint(0, len(self.__vermelhos)-1)]
+                emptySpot = self.__verifyNeighborhoodPiece(turn,piece)
+
+            if(len(self.__capturas)!=0):
+                findMovement = True
+                rList = self.__capturas.pop()
+            elif((len(emptySpot))!=0):
+                findMovement = True
+                rList = emptySpot.pop()
+
+        return rList
+
+        #Verifica vizinhos dado uma determina peca no tabuleiro e seu time (Amarelo ou Vermelho())
+
 
     # Resposnsavel por verificar se o movimento foi uma captura e tambem deleta a peca capturada
     def __checkCapture(self,turn,movement):
@@ -92,39 +145,28 @@ class Siege(object):
 
     def minMax(self,turn):
 
-        depth = 2
+        depth = 1
         states = []
         newStates = []
         states.append(State(self.__amarelos,self.__vermelhos,None))
-        movement = []
         for i in range(depth):
-
             for state in states:
-                newStates+= state.makeChilds(turn)
-            print len(newStates)
+                newStates = state.makeChilds(turn)
+
             if(turn=='a'):
                 turn = 'v'
             else:
                 turn = 'a'
-
-            #print len(newStates)
+            print len(newStates)
             states = []
             for state in newStates:
-                states+=state.makeChilds(turn)
+                states = state.makeChilds(turn)
+        print len(states)
+        state = states[0]
 
-            newStates = []
-            if(turn=='a'):
-                turn = 'v'
-            else:
-                turn = 'a'
-
-        choiceState = states[0]
-        for i in range(depth+(depth-1)):
-            choiceState = choiceState.ref
-
-
-        return choiceState.mov
-
+        print state.ref
+        print state.ref.ref
+        print state.ref.ref.ref
 
         #movimentEscolhido = states.sort(min)
         #return movimentEscolhido
@@ -138,7 +180,7 @@ class Siege(object):
         while(not self.__isDone()):
             if(turno=='a'):
                 self.__capturas = []
-                mov = self.minMax(turno) #minMax / Aleatorio e talz
+                mov = self.__movGenerator(turno) #minMax / Aleatorio e talz
                 print "##################"
                 print "AMARELO"
                 print mov
@@ -158,7 +200,7 @@ class Siege(object):
 
             elif(turno=='v'):
                 self.__capturas = []
-                mov = self.minMax(turno) #minMax / Aleatorio e talz
+                mov = self.__movGenerator(turno) #minMax / Aleatorio e talz
 
                 print "##################"
                 print "VERMELHO"
@@ -184,6 +226,6 @@ class Siege(object):
 
 
 s = Siege()
-s.gameSiege()
+#s.gameSiege()
 
-#s.minMax('a')
+s.minMax('a')
