@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+from turno import Turno
 from rules import *
 
 class State:
     __hAmarelo = 0
     __hVermelho = 0
     ref = None
-    __h = 0
     mov = None
     __stateBoard = []
 
@@ -18,7 +18,13 @@ class State:
         self.__stateBoard = [amarelos,vermelhos]
 
     def calculateH(self):
-        return 0
+        self.__fhAmarelo()
+        self.__fhVermelho()
+
+    def hAmarelo(self):
+        return self.__hAmarelo
+    def hVermelho(self):
+        return self.__hVermelho
 
     def getState(self):
         return self.__stateBoard
@@ -41,7 +47,10 @@ class State:
             newState.applyMovement(mov[:],turn)
             newState.calculateH()
             childrens.append(newState)
+            #print newState.hAmarelo()
+            #print newState.hVermelho()
             newState = None
+
 
         return childrens
 
@@ -103,9 +112,53 @@ class State:
                 break
         return captures
 
+    def __calculateDistanceToH1(self):
+        distances = []
+        for piece in self.__stateBoard[1]:
+            estados = vizinhos[piece]
+            novosEstados = []
+            findH1 = False
+            if(piece is 'h1'):
+                findH1 = True
+            distance = 0
+            while(not findH1):
+                distance+=1
+                for viz in estados:
+                    if(viz is 'h1'):
+                        findH1 = True
+                        break
+                    novosEstados+=vizinhos[viz]
+                estados = []
+                estados = novosEstados
+                novosEstados = []
+            distances.append(distance)
 
-
+        return distances[0]
     def __fhAmarelo(self):
-        return 0
+        self.__hAmarelo+=3
+        containsH1 = False
+        qtdPecas  = len(self.__stateBoard[0]) - len(self.__stateBoard[1])
+        for piece in self.__stateBoard[0]:
+            if(piece == 'h1'):
+                containsH1 = True
+                break
+        qtdCapturas = len(self.__verifyAllCaptures('a')) * 7
+
+        if(containsH1):
+            self.__hAmarelo+=10
+        self.__hAmarelo+= qtdPecas + qtdCapturas
+
+
     def __fhVermelho(self):
-        return 0
+        self.__hVermelho+=3
+        qtdPecas  = len(self.__stateBoard[1]) - len(self.__stateBoard[0])
+        distanceToH1 = self.__calculateDistanceToH1()
+        qtdCapturas = len(self.__verifyAllCaptures('v')) * 7
+
+        self.__hVermelho+=qtdPecas+qtdCapturas-distanceToH1
+
+#t = Turno.AMARELO
+#print t.value
+#t = Turno.VERMELHO
+#print t.value
+#print t is Turno.VERMELHO
