@@ -14,7 +14,8 @@ class Siege(object):
     #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
     #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
     __vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
-    __amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
+    #__amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
+    __amarelos = ['f1']
     __board = [__amarelos,__vermelhos]
     __capturas = []
 
@@ -64,15 +65,6 @@ class Siege(object):
     def __applyMovement(self,movement,turn):
         index = self.__board[turn.value].index(movement[0])
         self.__board[turn.value][index] = movement[1][0]
-        '''
-        if(movement[0] in self.__amarelos):
-            print turn.value
-            index = self.__board[turn.value].index(movement[0])
-            self.__board[turn.value][index] = movement[1][0]
-        elif(movement[0] in self.__vermelhos):
-            index = self.__vermelhos.index(movement[0])
-            self.__vermelhos[index] = movement[1][0]
-        '''
 
     #Apos a primeira captura e necessario verificar se a nova posicao da peca gera uma nova captura alista de todas as captudas anteriormente disponiveis
     #Segue intacta
@@ -80,16 +72,7 @@ class Siege(object):
         for viz in vizinhos[pos]:
             if(viz in self.__board[(~turn).value]):
                 self.__validateCapture(pos,viz)
-        '''
-        if(turn=='a'):
-            for viz in vizinhos[pos]:
-                if(viz in self.__vermelhos):
-                    self.__validateCapture(pos,viz)
-        elif(turn=='v'):
-            for viz in vizinhos[pos]:
-                if(viz in self.__amarelos):
-                    self.__validateCapture(pos,viz)
-        '''
+
     def minMax(self,turn):
 
         plays = 4
@@ -144,47 +127,6 @@ class Siege(object):
                     self.__verifyAllCaptures(turno)
 
             turno = ~turno
-            '''
-            if(turno=='a'):
-                self.__capturas = []
-                mov = self.minMax(Turno.AMARELO) #minMax / Aleatorio e talz
-                print "##################"
-                print Turno.AMARELO
-                print mov
-                self.__applyMovement(mov)
-                if(self.__checkCapture(turno,mov)==True):
-                    self.__verifyAllCaptures(turno)
-
-                    print "##################"
-                    print "MASSACRE"
-
-                    while len(self.__capturas)>0:
-                        mov = self.__capturas.pop()
-                        self.__applyMovement(mov)
-                        self.__checkCapture(turno,mov)
-                        self.__verifyAllCaptures(turno)
-                turno = 'v'
-
-            elif(turno=='v'):
-                self.__capturas = []
-                mov = self.minMax(Turno.VERMELHO) #minMax / Aleatorio e talz
-
-                print "##################"
-                print Turno.VERMELHO
-                print mov
-
-                self.__applyMovement(mov)
-                if(self.__checkCapture(turno,mov)==True):
-                    self.__verifyAllCaptures(turno)
-                    print "##################"
-                    print "MASSACRE"
-                    while len(self.__capturas)>0:
-                        mov = self.__capturas.pop()
-                        self.__applyMovement(mov)
-                        self.__checkCapture(turno,mov)Turno.AMARELO
-                        self.__verifyAllCaptures(turno)
-                turno = 'a'
-            '''
 
         print self.__amarelos
         print self.__vermelhos
