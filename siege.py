@@ -4,6 +4,8 @@
 from state import State
 from turno import Turno
 from rules import *
+from Mensagens import *
+import thread
 
 import random
 
@@ -48,7 +50,7 @@ class Siege(object):
                     self.__validateCapture(piece,viz)
 
     # Resposnsavel por verificar se o movimento foi uma captura e tambem deleta a peca capturada
-    def __checkCapture(self,turn,movement):
+    def checkCapture(self,turn,movement):
         boolReturn = False
 
         # Verificando se foi uma captura para deixar continuar outras capturas
@@ -62,7 +64,7 @@ class Siege(object):
         return boolReturn
 
     #Aplica a modificacao do movimento no tabuleiro
-    def __applyMovement(self,movement,turn):
+    def applyMovement(self,movement,turn):
         index = self.__board[turn.value].index(movement[0])
         self.__board[turn.value][index] = movement[1][0]
 
@@ -105,16 +107,23 @@ class Siege(object):
     #Metodo principal do jogo
     def gameSiege(self):
         turno = Turno.VERMELHO
-
+        decideCor(turno)
+        #decideCor(turno)
         while(not self.__isDone()):
+
+            if(turno==Turno.AMARELO):
+                mov = recebeMensagem(turno)
+                self.applyMovement(mov,turno)
+                self.checkCapture(turno,mov)
 
             self.__capturas = []
             mov = self.minMax(turno) #minMax / Aleatorio e talz
+            enviaMensagem(montaMensagem(mov))
             print "##################"
             print turno
             print mov
-            self.__applyMovement(mov,turno)
-            if(self.__checkCapture(turno,mov)==True):
+            self.applyMovement(mov,turno)
+            if(self.checkCapture(turno,mov)==True):
                 self.__verifyAllCaptures(turno)
 
                 print "##################"
@@ -122,11 +131,18 @@ class Siege(object):
 
                 while len(self.__capturas)>0:
                     mov = self.__capturas.pop()
-                    self.__applyMovement(mov,turno)
-                    self.__checkCapture(turno,mov)
+                    enviaMensagem(montaMensagem(mov))
+                    self.applyMovement(mov,turno)
+                    self.checkCapture(turno,mov)
                     self.__verifyAllCaptures(turno)
 
-            turno = ~turno
+            if(turno==Turno.VERMELHO):
+                mov = recebeMensagem(turno)
+                self.applyMovement(mov,turno)
+                self.checkCapture(turno,mov)
+
+
+            #turno = ~turno
 
         print self.__amarelos
         print self.__vermelhos
