@@ -2,9 +2,9 @@
 #-*- coding: utf-8 -*-
 
 from state import State
+from client import Client
 from turno import Turno
 from rules import *
-from Mensagens import *
 import thread
 
 import random
@@ -13,11 +13,11 @@ import random
 
 class Siege(object):
 
-    #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
-    #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
-    __vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
+    __amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
+    __vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
+    #__vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
     #__amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
-    __amarelos = ['f1']
+    #__amarelos = ['f1']
     __board = [__amarelos,__vermelhos]
     __capturas = []
 
@@ -77,7 +77,7 @@ class Siege(object):
 
     def minMax(self,turn):
 
-        plays = 4
+        plays = 2
         states = []
         newStates = []
         initialState = State(self.__amarelos[:],self.__vermelhos[:],None)
@@ -107,18 +107,17 @@ class Siege(object):
     #Metodo principal do jogo
     def gameSiege(self):
         turno = Turno.AMARELO
-        enviaMensagem("conecta",turno)
-        #decideCor(turno)
+        client = Client(turno,"192.168.0.104")
         while(not self.__isDone()):
 
             if(turno==Turno.AMARELO):
-                mov = recebeMensagem(turno)
-                self.applyMovement(mov,turno)
-                self.checkCapture(turno,mov)
+                mov = client.recebeMensagem()
+                self.applyMovement(mov,~turno)
+                self.checkCapture(~turno,mov)
 
             self.__capturas = []
             mov = self.minMax(turno) #minMax / Aleatorio e talz
-            enviaMensagem(montaMensagem(mov),turno)
+            client.enviaMensagem(client.montaMensagem(mov))
             print "##################"
             print turno
             print mov
@@ -131,21 +130,21 @@ class Siege(object):
 
                 while len(self.__capturas)>0:
                     mov = self.__capturas.pop()
-                    enviaMensagem(montaMensagem(mov),turno)
+                    client.enviaMensagem(client.montaMensagem(mov))
                     self.applyMovement(mov,turno)
                     self.checkCapture(turno,mov)
                     self.__verifyAllCaptures(turno)
 
             if(turno==Turno.VERMELHO):
-                mov = recebeMensagem(turno)
-                self.applyMovement(mov,turno)
-                self.checkCapture(turno,mov)
+                mov = client.recebeMensagem()
+                self.applyMovement(mov,~turno)
+                self.checkCapture(~turno,mov)
 
 
             #turno = ~turno
 
-        print self.__amarelos
-        print self.__vermelhos
+            print self.__amarelos
+            print self.__vermelhos
 
 
 
