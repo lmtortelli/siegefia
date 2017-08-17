@@ -13,10 +13,10 @@ import random
 
 class Siege(object):
 
-    __amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
-    __vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
-    #__vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
-    #__amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
+    #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
+    #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
+    __vermelhos = ['d1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
+    __amarelos = ['g2', 'g1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
     #__amarelos = ['f1']
     __board = [__amarelos,__vermelhos]
     __capturas = []
@@ -85,7 +85,6 @@ class Siege(object):
         initialState.turnoRef = turn
         states.append(initialState)
         for i in range(plays):
-            print i
             if(i%2==0):
                 for state in states:
                     newStates+= state.makeChilds(turn,Turno.MAX)
@@ -102,7 +101,6 @@ class Siege(object):
         for i in range(plays-1):
             choiceState = choiceState.ref
 
-        print choiceState.h[0]
         return choiceState.mov
 
 
@@ -114,7 +112,9 @@ class Siege(object):
         while(not self.__isDone()):
 
             if(turno==Turno.AMARELO):
-                mov = client.recebeMensagem()
+                mov = None
+                while(mov==None):
+                    mov = client.recebeMensagem()
                 self.applyMovement(mov,~turno)
                 self.checkCapture(~turno,mov)
 
@@ -140,8 +140,9 @@ class Siege(object):
 
             if(turno==Turno.VERMELHO):
                 mov = client.recebeMensagem()
-                self.applyMovement(mov,~turno)
-                self.checkCapture(~turno,mov)
+                if(mov!=None):
+                    self.applyMovement(mov,~turno)
+                    self.checkCapture(~turno,mov)
 
 
             #turno = ~turno

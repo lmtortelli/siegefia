@@ -27,17 +27,24 @@ class Client:
 
     def enviaMensagem(self,mensagem):
         self.sock.sendto(mensagem.encode('utf-8'), (self.UDP_IP, self.UDP_PORT))
+        if(mensagem!='conecta'):
+            mensagem = 'fim'
+            self.sock.sendto(mensagem.encode('utf-8'), (self.UDP_IP, self.UDP_PORT))
 
     def recebeMensagem(self):
         #self.sock.bind((UDP_IP, UDP_PORT))
         while True:
            data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
-           if(data!="ok" and data!='' and data!='conectado'):
-               return (self.decodeMensagem(data))
+           if(data!='' and data!='conectado' and data!='fim' and data!='ok'):
+               return self.decodeMensagem(data)
+           else:
+               return None
+
+
 
     def decodeMensagem(self,mensagem):
         msg = mensagem.split()
-        print msg
+        print "Mensagem Recebida "+mensagem
         if("captura" in msg):
             return [msg[1],[msg[3],msg[5]]]
         else:

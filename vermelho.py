@@ -13,10 +13,10 @@ import random
 
 class Siege(object):
 
-    __amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
-    __vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
-    #__vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
-    #__amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
+    #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
+    #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
+    __vermelhos = ['d1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
+    __amarelos = ['g2', 'g1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
     #__amarelos = ['f1']
     __board = [__amarelos,__vermelhos]
     __capturas = []
@@ -112,18 +112,22 @@ class Siege(object):
         while(not self.__isDone()):
 
             if(turno==Turno.AMARELO):
-                mov = client.recebeMensagem()
+                mov = None
+                while(mov==None):
+                    mov = client.recebeMensagem()
                 self.applyMovement(mov,~turno)
                 self.checkCapture(~turno,mov)
 
             self.__capturas = []
             mov = self.minMax(turno) #minMax / Aleatorio e talz
-            client.enviaMensagem(client.montaMensagem(mov))
+
             print "##################"
             print turno
             print mov
             self.applyMovement(mov,turno)
-            if(self.checkCapture(turno,mov)==True):
+            captureBool = self.checkCapture(turno,mov)
+            client.enviaMensagem(client.montaMensagem(mov))
+            if(captureBool==True):
                 self.__verifyAllCaptures(turno)
 
                 print "##################"
@@ -137,7 +141,9 @@ class Siege(object):
                     self.__verifyAllCaptures(turno)
 
             if(turno==Turno.VERMELHO):
-                mov = client.recebeMensagem()
+                mov = None
+                while(mov==None):
+                    mov = client.recebeMensagem()
                 self.applyMovement(mov,~turno)
                 self.checkCapture(~turno,mov)
 

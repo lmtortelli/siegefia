@@ -65,6 +65,8 @@ class Siege(object):
 
     #Aplica a modificacao do movimento no tabuleiro
     def applyMovement(self,movement,turn):
+        print turn
+        print movement
         index = self.__board[turn.value].index(movement[0])
         self.__board[turn.value][index] = movement[1][0]
 
