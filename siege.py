@@ -6,18 +6,16 @@ from client import Client
 from turno import Turno
 from rules import *
 import sys
-
 import random
+
 
 
 
 class Siege(object):
 
-    #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
-    #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
     __vermelhos = ['d1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
     __amarelos = ['g2', 'g1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
-    #__amarelos = ['f1']
+
     __board = [__amarelos,__vermelhos]
     __capturas = []
     __turno = None
@@ -39,8 +37,8 @@ class Siege(object):
             return False
 
 
-        #Realiza a validacao da captura dado uma peca e seu vizinho (de cores contrarias) Assim se cosneguir aplica ruma captura ira retornar
-        #Dentro da lista de captura todos os movimentos necessarios
+    #Realiza a validacao da captura dado uma peca e seu vizinho (de cores contrarias) Assim se cosneguir aplica ruma captura ira retornar
+    #Dentro da lista de captura todos os movimentos necessarios
     def __validateCapture(self,piece,viz):
         emptySpot = None
         for tupl in capturas[piece]:
@@ -66,9 +64,6 @@ class Siege(object):
         if(boolReturn):
             self.__board[(~turn).value].remove(movement[1][1])
 
-        #print self.__amarelos
-        #print self.__vermelhos
-
         return boolReturn
 
     #Aplica a modificacao do movimento no tabuleiro
@@ -90,6 +85,30 @@ class Siege(object):
             if(mov!=None and mov!='fim'):
                 self.applyMovement(mov,~turno)
                 self.checkCapture(~turno,mov)
+        return self.__isDone()
+
+    def __choiceMax(self,lista,turno):
+        state = lista[len(lista)-1]
+        refH = state.h[turno.value]
+        statesChoices = []
+        for i in range(len(lista)-1,0,-1):
+            if(lista[i].h[turno.value]<refH):
+                break
+            statesChoices.append(lista[i])
+        random.shuffle(statesChoices)
+        return statesChoices[0]
+
+    def __choiceMin(self,lista,turno):
+        state = lista[0]
+        refH = state.h[turno.value]
+        statesChoices = []
+        for i in range(len(lista)):
+            if(lista[i].h[turno.value]>refH):
+                break
+            statesChoices.append(lista[i])
+        random.shuffle(statesChoices)
+        return statesChoices[0]
+
 
     def minMax(self,turn):
 
@@ -97,7 +116,7 @@ class Siege(object):
         states = []
         newStates = []
         initialState = State(self.__amarelos[:],self.__vermelhos[:],None)
-        initialState.calculateH()
+        initialState.calculateH(0)
         initialState.turnoRef = turn
         states.append(initialState)
         for i in range(plays):
@@ -105,14 +124,14 @@ class Siege(object):
                 for state in states:
                     newStates+= state.makeChilds(turn,Turno.MAX)
                 newStates.sort()
-                choiceState = newStates[len(newStates)-1]
+                choiceState = self.__choiceMax(newStates,turn)
                 states=[]
             else:
                 for state in newStates:
                     states+= state.makeChilds(~turn,Turno.MIN)
                 newStates = []
                 states.sort()
-                choiceState = states[0]
+                choiceState = self.__choiceMin(states,(~turn))
 
         for i in range(plays-1):
             choiceState = choiceState.ref
@@ -127,7 +146,8 @@ class Siege(object):
         while(not self.__isDone()):
 
             if(turno==Turno.AMARELO):
-                self.__receiveMensage(client,turno)
+                if(self.__receiveMensage(client,turno)):
+                    break
 
             self.__capturas = []
             mov = self.minMax(turno) #minMax / Aleatorio e talz
@@ -155,24 +175,19 @@ class Siege(object):
 
 
             if(turno==Turno.VERMELHO):
-                self.__receiveMensage(client,turno)
+                if(self.__receiveMensage(client,turno)):
+                    break
 
             #Descomentar para jogar internamente
             #turno = ~turno
 
-        print self.__amarelos
-        print self.__vermelhos
+        print "AMARELOS "+str(self.__amarelos)
+        print "VERMELHOS "+str(self.__vermelhos)
 
 
 
 
-
-
-# get argument list using sys module
 
 args = str(sys.argv)
 s = Siege(str(sys.argv[1]),str(sys.argv[2]))
-
 s.gameSiege()
-
-#s.minMax('a')
