@@ -8,15 +8,19 @@ class State:
     ref = None
     mov = None
     h = [0,0]
+    turnoRef = None
     __stateBoard = []
 
 
 
     def __init__(self,amarelos,vermelhos,ref):
         self.ref = ref
-        self.__stateBoard = [amarelos,vermelhos]
+        self.h = [0,0]
         if(ref!=None):
-            self.h = ref.h[:]
+            self.turnoRef = ref.turnoRef
+        self.__stateBoard = [amarelos,vermelhos]
+        #if(ref!=None):
+        #    self.h = ref.h[:]
 
     def calculateH(self):
         self.__fhAmarelo()
@@ -127,52 +131,75 @@ class State:
                 break
         return captures
 
-    def __calculateDistanceToH1(self):
-        distances = []
-        for piece in self.__stateBoard[1]:
-            estados = vizinhos[piece]
-            novosEstados = []
-            findH1 = False
-            if(piece is 'h1'):
-                findH1 = True
-            distance = 0
-            while(not findH1):
-                distance+=1
-                for viz in estados:
-                    if(viz is 'h1'):
-                        findH1 = True
-                        break
-                    novosEstados+=vizinhos[viz]
-                estados = []
-                estados = novosEstados
-                novosEstados = []
-            distances.append(distance)
+    def __calculateDistanceToH1(self,turn):
+        listaVal = list()
+        for piece in self.__stateBoard[turn.value]:
+            if('a' in piece):
+                listaVal.append(7)
+            elif('b' in piece):
+                listaVal.append(6)
+            elif('c' in piece):
+                listaVal.append(5)
+            elif('d' in piece):
+                listaVal.append(4)
+            elif('e' in piece):
+                listaVal.append(3)
+            elif('f' in piece):
+                listaVal.append(2)
+            elif('g' in piece):
+                listaVal.append(1)
+            elif('h' in piece):
+                return 1000
 
-        return distances[0]
+        listaVal.sort()
+        dist = listaVal[len(listaVal)-1]-listaVal[0]
+
+        if(dist>4):
+            return -dist*2
+        else:
+            return dist*3
+
+    def __calculaAgrupamento(self,turn):
+        s = set()
+        for piece in self.__stateBoard[turn.value]:
+            s.add(piece[0])
+        return -len(s)*10
+
     def __fhAmarelo(self):
         hAmarelo= 0
         containsH1 = False
-        qtdPecas  = (len(self.__stateBoard[0]) - len(self.__stateBoard[1]))*10
+        qtdPecas  = (len(self.__stateBoard[0]) - len(self.__stateBoard[1]))*2
         for piece in self.__stateBoard[0]:
             if(piece == 'h1'):
                 containsH1 = True
                 break
-        qtdCapturas = len(self.__verifyAllCaptures(Turno.AMARELO)) * 15
-
+        qtdCapturas = len(self.__verifyAllCaptures(Turno.AMARELO)) * 20
         if(containsH1):
-            hAmarelo+=20
+            hAmarelo+=1000
 
-        self.h[Turno.AMARELO.value]+= qtdPecas + qtdCapturas + hAmarelo
+        self.h[Turno.AMARELO.value]+= qtdPecas + qtdCapturas + hAmarelo + self.__calculaAgrupamento(Turno.AMARELO)
 
 
 
     def __fhVermelho(self):
         hVermelho=0
-        qtdPecas  = (len(self.__stateBoard[1]) - len(self.__stateBoard[0]))*10
-        distanceToH1 = self.__calculateDistanceToH1()
+        qtdPecas  = (len(self.__stateBoard[1]) - len(self.__stateBoard[0]))*2
+        distanceToH1 = self.__calculateDistanceToH1(Turno.VERMELHO)
         qtdCapturas = len(self.__verifyAllCaptures(Turno.VERMELHO)) * 15
 
-        self.h[Turno.VERMELHO.value]+=qtdPecas+qtdCapturas + hVermelho - (distanceToH1*10)
+        self.h[Turno.VERMELHO.value]+=qtdPecas+qtdCapturas + hVermelho + distanceToH1*100
+
+    def __eq__(self,other):
+        if(self.turnoRef == Turno.AMARELO):
+            return self.h[0] == other.h[0]
+        else:
+            return self.h[1] == other.h[1]
+
+    def __lt__(self,other):
+        if(self.turnoRef == Turno.AMARELO):
+            return self.h[0] < other.h[0]
+        else:
+            return self.h[1] < other.h[1]
 
 #t = Turno.AMARELO
 #print t.value

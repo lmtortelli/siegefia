@@ -37,6 +37,7 @@ class Client:
 
     def decodeMensagem(self,mensagem):
         msg = mensagem.split()
+        print msg
         if("captura" in msg):
             return [msg[1],[msg[3],msg[5]]]
         else:

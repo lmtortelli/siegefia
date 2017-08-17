@@ -5,7 +5,7 @@ from state import State
 from client import Client
 from turno import Turno
 from rules import *
-import thread
+import operator
 
 import random
 
@@ -77,31 +77,31 @@ class Siege(object):
 
     def minMax(self,turn):
 
-        plays = 2
+        plays = 3
         states = []
         newStates = []
         initialState = State(self.__amarelos[:],self.__vermelhos[:],None)
         initialState.calculateH()
+        initialState.turnoRef = turn
         states.append(initialState)
         for i in range(plays):
             if(i%2==0):
                 for state in states:
                     newStates+= state.makeChilds(turn,Turno.MAX)
-                print len(newStates)
-                choiceState = max(newStates, key=lambda x: x.h[turn.value])
+                newStates.sort()
+                choiceState = newStates[len(newStates)-1]
                 states=[]
             else:
                 for state in newStates:
                     states+= state.makeChilds(~turn,Turno.MIN)
-                print len(states)
                 newStates = []
-                choiceState = min(states, key=lambda x: x.h[(~turn).value])
+                states.sort()
+                choiceState = states[0]
 
         for i in range(plays-1):
             choiceState = choiceState.ref
 
         return choiceState.mov
-
 
 
     #Metodo principal do jogo
