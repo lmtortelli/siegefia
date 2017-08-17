@@ -5,7 +5,7 @@ from state import State
 from client import Client
 from turno import Turno
 from rules import *
-import operator
+import sys
 
 import random
 
@@ -13,14 +13,22 @@ import random
 
 class Siege(object):
 
-    __amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
-    __vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
-    #__vermelhos = ['e1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
-    #__amarelos = ['g2', 'f1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
+    #__amarelos = ['g1','g2','g3','g4','g5','g6','g7','g8','f1','f2','f3','f4','f5','f6','f7','f8']
+    #__vermelhos = ['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12','a13','a14','a15','a16']
+    __vermelhos = ['d1', 'd3', 'd5', 'd7', 'd9', 'd11', 'd13', 'd15']
+    __amarelos = ['g2', 'g1', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8']
     #__amarelos = ['f1']
     __board = [__amarelos,__vermelhos]
     __capturas = []
+    __turno = None
+    __ipServer = ''
 
+    def __init__(self,turno,ip):
+        self.__ipServer = ip
+        if(turno=='0'):
+            self.__turno = Turno.AMARELO
+        elif(turno=='1'):
+            self.__turno = Turno.VERMELHO
 
     def __isDone(self):
         if('h1' in self.__vermelhos):
@@ -65,8 +73,6 @@ class Siege(object):
 
     #Aplica a modificacao do movimento no tabuleiro
     def applyMovement(self,movement,turn):
-        print turn
-        print movement
         index = self.__board[turn.value].index(movement[0])
         self.__board[turn.value][index] = movement[1][0]
 
@@ -76,6 +82,14 @@ class Siege(object):
         for viz in vizinhos[pos]:
             if(viz in self.__board[(~turn).value]):
                 self.__validateCapture(pos,viz)
+
+    def __receiveMensage(self,client,turno):
+        mov = None
+        while(mov!='fim' and not self.__isDone() ):
+            mov = client.recebeMensagem()
+            if(mov!=None and mov!='fim'):
+                self.applyMovement(mov,~turno)
+                self.checkCapture(~turno,mov)
 
     def minMax(self,turn):
 
@@ -108,23 +122,23 @@ class Siege(object):
 
     #Metodo principal do jogo
     def gameSiege(self):
-        turno = Turno.VERMELHO
-        client = Client(turno,"127.0.0.1")
+        turno = self.__turno
+        client = Client(turno,self.__ipServer)
         while(not self.__isDone()):
 
             if(turno==Turno.AMARELO):
-                mov = client.recebeMensagem()
-                self.applyMovement(mov,~turno)
-                self.checkCapture(~turno,mov)
+                self.__receiveMensage(client,turno)
 
             self.__capturas = []
             mov = self.minMax(turno) #minMax / Aleatorio e talz
             client.enviaMensagem(client.montaMensagem(mov))
+
             print "##################"
             print turno
             print mov
             self.applyMovement(mov,turno)
-            if(self.checkCapture(turno,mov)==True):
+            captureBool = self.checkCapture(turno,mov)
+            if(captureBool):
                 self.__verifyAllCaptures(turno)
 
                 print "##################"
@@ -132,27 +146,33 @@ class Siege(object):
 
                 while len(self.__capturas)>0:
                     mov = self.__capturas.pop()
+                    print mov
                     client.enviaMensagem(client.montaMensagem(mov))
                     self.applyMovement(mov,turno)
                     self.checkCapture(turno,mov)
                     self.__verifyAllCaptures(turno)
+            client.enviaMensagem('fim')
+
 
             if(turno==Turno.VERMELHO):
-                mov = client.recebeMensagem()
-                self.applyMovement(mov,~turno)
-                self.checkCapture(~turno,mov)
+                self.__receiveMensage(client,turno)
 
-
+            #Descomentar para jogar internamente
             #turno = ~turno
 
-            print self.__amarelos
-            print self.__vermelhos
+        print self.__amarelos
+        print self.__vermelhos
 
 
 
 
 
-s = Siege()
+
+# get argument list using sys module
+
+args = str(sys.argv)
+s = Siege(str(sys.argv[1]),str(sys.argv[2]))
+
 s.gameSiege()
 
 #s.minMax('a')
