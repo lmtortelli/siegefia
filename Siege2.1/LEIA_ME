@@ -1,0 +1,156 @@
+   Comunicação
+
+UDP
+PORTA_VERMELHO 5001
+PORTA_AMARELO 5002
+
+
+-----------
+   Iniciando Conexão
+   
+=> Simulador 
+se conecta ao VREP
+dá bind nas portas PORTA_SIMULADOR_VERMELHO e PORTA_SIMULADOR_AMARELO
+aguarda mensagem "conecta" dos jogadores
+ao recebê-las responde com "conectado"
+
+=> Jogadores
+envia mensagem "conecta" até obter mensagem "conectado" do servidor
+
+-----------
+   Durante o Jogo
+   
+=> Jogador da vez 
+Envia, para o Simulador, a mesagem:
+- "De <origem> para <destino>" se for uma jogada sem captura ou
+  ex: "De a1 para b1"
+  
+- "De <origem> para <destino> captura <captura>" se for uma jogada com captura
+  ex: "De a1 para c1 captura b1"
+
+  
+=> Simulador
+envia, para o jogador da vez, a mensagem:
+- "ok" se for informada uma jogada correta ou
+- "Posição inválida"  se for informada uma jogada incorreta
+
+envia, para o jogador não da vez, a mensagem informativa da jogada correta
+ex: "De a1 para b1" ou "De a1 para c1 captura b1"
+
+
+=> Jogador da vez 
+- Envia mensagem "fim" após a última jogada (se não houverem mais capturas)
+  ou a informação de nova jogada (válida apenas para capturas consecutivas)
+
+  
+=> Simulador
+envia, para o jogador da vez, a mensagem:
+- "ok" se for informada uma jogada correta ou
+- "Posição inválida"  se for informada uma jogada incorreta
+- ou nenhuma mensagem se o jogador tiver informado "fim"
+
+envia, para o jogador não da vez, a mensagem informativa da jogada correta 
+ou "fim" para indicar o termino da jogada do outro jogador
+
+
+---------
+=> Exemplo
+
+Vermelho  para Simulador => "conecta"
+Simulador para Vermelho  => "conectado"
+
+Amarelo   para Simulador => "conecta"
+Simulador para Amarelo   => "conectado"
+
+Vermelho  para Simulador => "De a1 para b1"
+Simulador para Vermelho  => "ok"
+Simulador para Amarelo   => "De a1 para b1"
+Vermelho para Simulador => "fim"
+Simulador para Amarelo  => "fim"
+
+
+Amarelo  para Simulador  => "De f1 para e20"
+Simulador para Amarelo   => "Posição inválida"
+Amarelo  para Simulador  => "De f1 para e1"
+Simulador para Amarelo   => "ok"
+Simulador para Vermelho  => "De f1 para e1"
+Amarelo para Simulador   => "fim"
+Simulador para Vermelho  => "fim"
+
+-- Com captura 
+Vermelho para Simulador => "De a1 para c1 captura b1"
+Simulador para Vermelho => "ok"
+Simulador para Amarelo  => "De a1 para c1 captura b1"
+Vermelho para Simulador => "fim"
+Simulador para Amarelo  => "fim"
+
+-- Com captura consecutiva
+Vermelho para Simulador => "De a1 para c1 captura b1"
+Simulador para Vermelho => "ok"
+Simulador para Amarelo  => "De a1 para c1 captura b1"
+Vermelho para Simulador => "De c1 para e1 captura d1"
+Simulador para Vermelho => "ok"
+Simulador para Amarelo  => "De c1 para e1 captura d1"
+Vermelho para Simulador => "fim"
+Simulador para Amarelo  => "fim"
+
+
+
+
+=====================================================================
+   Execução
+
+=> Aba 1 - VREP (download http://www.coppeliarobotics.com/downloads.html)
+cd V-REP_PRO_EDU_V3_4_0_Linux
+./vrep.sh
+File > Open Scene
+Seleciona o arquivo Siege/Simulador/simulador_fim.ttt
+
+----------------------
+=> Aba 2 - Simulador 
+cd Siege/Simulador/build
+*** (Compilar na primeira execução) 
+*** qmake .. 
+*** make
+./Simulador
+
+----------------------
+=> Aba 3 - Vermelho
+cd Siege/Jogador/build
+*** (Compilar na primeira execução) 
+*** qmake .. 
+*** make
+./IA 0
+
+----------------------
+=> Aba 4 - Vermelho
+cd Siege/Jogador/build
+./IA 1
+
+
+=====================================================================
+   Configuração de Rede
+
+Siege/Simulador/conf
+Siege/Jogador/conf
+
+=====================================================================
+   Compilar
+   
+Compilar Qt
+Na pasta build
+qmake ..
+make -j4
+
+Clean na compilação
+make clean
+
+=====================================================================
+   Opções do Simulador
+   
+Simulador arquivo main 
+jogar em rede e testar IA, padrão => função siege->jogo_rede()
+jogar no teclado sem ser em rede => função siege->jogo()
+
+
+
